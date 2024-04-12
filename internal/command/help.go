@@ -1,12 +1,24 @@
 package command
 
-type HelpCommand struct {
-}
+import "context"
 
-func (c *HelpCommand) GetName() string {
+type HelpCommand struct{}
+
+var _ Command = (*HelpCommand)(nil)
+
+func (c HelpCommand) GetName() string {
 	return "help"
 }
 
-func (c *HelpCommand) Execute(arg string) (string, error) {
-	return "help", nil
+func (c HelpCommand) GetDescription() string {
+	return "display help message"
+}
+
+func (c HelpCommand) Execute(_ context.Context, _ *Message) (string, error) {
+	commands := getCommands()
+	var help string
+	for k, v := range commands {
+		help += k + ": " + v + "\n"
+	}
+	return help, nil
 }

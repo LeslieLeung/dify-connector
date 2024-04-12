@@ -3,6 +3,8 @@ package difyconnector
 import (
 	"context"
 	"github.com/leslieleung/dify-connector/internal/channel"
+	"github.com/leslieleung/dify-connector/internal/command"
+	"github.com/leslieleung/dify-connector/internal/database"
 	"github.com/leslieleung/dify-connector/internal/hub"
 	"github.com/spf13/cobra"
 	"log/slog"
@@ -30,18 +32,33 @@ func runServe(_ *cobra.Command, _ []string) {
 		}
 	}()
 
-	// TODO dynamically toggle channels
-	channels := make([]channel.Channel, 0)
-	if discordToken := os.Getenv("DISCORD_TOKEN"); discordToken != "" {
-		channels = append(channels, channel.NewDiscord(discordToken))
+	if os.Getenv("DATABASE_DSN") == "" {
+		println("DATABASE_DSN is required")
+		os.Exit(1)
 	}
-	if dingTalkClientID := os.Getenv("DINGTALK_CLIENT_ID"); dingTalkClientID != "" {
-		channels = append(channels, channel.NewDingTalk(dingTalkClientID, os.Getenv("DINGTALK_CLIENT_SECRET")))
+
+	// Initialize DB
+	database.Init(os.Getenv("DATABASE_DSN"))
+
+	channels, err := channel.LoadChannels(ctx)
+	if err != nil {
+		panic(err)
+	}
+
+	// TODO just a temporary thing, need to find a better way to initialize
+	if len(channels) == 0 {
+		slog.Info("No channels to start")
+		return
 	}
 
 	h := hub.New(
 		hub.RegisterChannels(
 			channels...,
+		),
+		hub.RegisterCommands(
+			command.ChatCommand{},
+			command.AppCommand{},
+			command.HelpCommand{},
 		),
 	)
 	h.Start(ctx)

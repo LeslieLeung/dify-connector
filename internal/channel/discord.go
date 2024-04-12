@@ -2,10 +2,12 @@ package channel
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"github.com/leslieleung/dify-connector/internal/message"
+	"github.com/leslieleung/dify-connector/internal/command"
 	"log/slog"
+	"strings"
 	"sync"
 )
 
@@ -15,10 +17,25 @@ type Discord struct {
 	dg *discordgo.Session
 }
 
+var _ Channel = (*Discord)(nil)
+
+type DiscordCredential struct {
+	Token string `json:"token"`
+}
+
 func NewDiscord(token string) *Discord {
 	return &Discord{
 		Token: token,
 	}
+}
+
+func NewDiscordWithCredential(credential string) (*Discord, error) {
+	cred := &DiscordCredential{}
+	err := json.Unmarshal([]byte(credential), cred)
+	if err != nil {
+		return nil, err
+	}
+	return NewDiscord(cred.Token), nil
 }
 
 func (d *Discord) Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -60,6 +77,8 @@ func (d *Discord) Stop(_ context.Context) {
 	d.dg.Close()
 }
 
+const DiscordBotPrefix = "<@%s>"
+
 // This function will be called (due to AddHandler above) every time a new
 // message is created on any channel that the authenticated bot has access to.
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -76,12 +95,25 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// send the message through dify app and get response
-	msg := &message.Message{
-		Command: "chat",
-		Body:    m.Content,
+	content := strings.TrimSpace(strings.TrimPrefix(m.Content, fmt.Sprintf(DiscordBotPrefix, s.State.User.ID)))
+	parts := strings.Fields(content)
+
+	if len(parts) == 0 {
+		return // No command provided
 	}
-	resp, err := message.Process(msg)
+
+	// send the message through dify app and get response
+	msg := &command.Message{
+		Command:        "chat", // default to chat
+		Body:           content,
+		UserIdentifier: "discord:" + m.Author.ID,
+	}
+	if command.IsCommand(parts[0]) {
+		msg.Command = strings.TrimSpace(parts[0])
+		msg.Body = strings.TrimSpace(strings.TrimPrefix(content, parts[0]))
+	}
+
+	resp, err := command.Process(context.Background(), msg)
 	if err != nil {
 		slog.Error("failed to process message", "err", err)
 		return

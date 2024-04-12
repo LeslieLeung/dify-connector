@@ -2,11 +2,13 @@ package channel
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/leslieleung/dify-connector/internal/message"
+	"github.com/leslieleung/dify-connector/internal/command"
 	"github.com/open-dingtalk/dingtalk-stream-sdk-go/chatbot"
 	"github.com/open-dingtalk/dingtalk-stream-sdk-go/client"
 	"log/slog"
+	"strings"
 	"sync"
 )
 
@@ -17,11 +19,27 @@ type DingTalk struct {
 	dt *client.StreamClient
 }
 
+var _ Channel = (*DingTalk)(nil)
+
+type DingTalkCredential struct {
+	ClientID     string `json:"client_id"`
+	ClientSecret string `json:"client_secret"`
+}
+
 func NewDingTalk(clientID, clientSecret string) *DingTalk {
 	return &DingTalk{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 	}
+}
+
+func NewDingTalkWithCredential(credential string) (*DingTalk, error) {
+	cred := &DingTalkCredential{}
+	err := json.Unmarshal([]byte(credential), cred)
+	if err != nil {
+		return nil, err
+	}
+	return NewDingTalk(cred.ClientID, cred.ClientSecret), nil
 }
 
 func (d *DingTalk) Start(ctx context.Context, wg *sync.WaitGroup) {
@@ -53,6 +71,8 @@ func (d *DingTalk) Stop(_ context.Context) {
 	d.dt.Close()
 }
 
+const DingTalkBotPrefix = DiscordBotPrefix
+
 func onChatBotMessageReceived(ctx context.Context, data *chatbot.BotCallbackDataModel) ([]byte, error) {
 	slog.Info("Received message from DingTalk chatbot", "sender", data.SenderId, "content", data.Text.Content, "chatbotUserId", data.ChatbotUserId)
 	// if the message is from the bot itself, ignore it
@@ -61,11 +81,23 @@ func onChatBotMessageReceived(ctx context.Context, data *chatbot.BotCallbackData
 	}
 	// TODO if the bot is not on the mentioned list, ignore it
 
-	msg := &message.Message{
-		Command: "chat",
-		Body:    data.Text.Content,
+	content := strings.TrimSpace(strings.TrimPrefix(data.Text.Content, fmt.Sprintf(DingTalkBotPrefix, data.ChatbotUserId)))
+	parts := strings.Fields(content)
+
+	if len(parts) == 0 {
+		return []byte(""), nil
 	}
-	resp, err := message.Process(msg)
+
+	msg := &command.Message{
+		Command:        "chat",
+		Body:           content,
+		UserIdentifier: "dingtalk:" + data.SenderId,
+	}
+	if command.IsCommand(parts[0]) {
+		msg.Command = strings.TrimSpace(parts[0])
+		msg.Body = strings.TrimSpace(strings.TrimPrefix(content, parts[0]))
+	}
+	resp, err := command.Process(ctx, msg)
 	if err != nil {
 		slog.Error("Error processing message", "error", err)
 		return nil, err

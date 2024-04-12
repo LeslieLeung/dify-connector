@@ -4,14 +4,12 @@ import (
 	"context"
 	"github.com/leslieleung/dify-connector/internal/channel"
 	"github.com/leslieleung/dify-connector/internal/command"
-	"github.com/leslieleung/dify-connector/pkg/dify"
 	"sync"
 )
 
 type Hub struct {
 	channels []channel.Channel
-	commands []command.Command
-	difyApps []*dify.App
+	commands map[string]command.Command
 
 	wg *sync.WaitGroup
 }
@@ -27,6 +25,7 @@ func New(opts ...Option) *Hub {
 }
 
 func (h *Hub) Start(ctx context.Context) {
+	command.Commands = h.commands
 	for _, c := range h.channels {
 		println("Starting channel")
 		h.wg.Add(1)
@@ -45,12 +44,11 @@ func RegisterChannels(channels ...channel.Channel) Option {
 
 func RegisterCommands(commands ...command.Command) Option {
 	return func(h *Hub) {
-		h.commands = append(h.commands, commands...)
-	}
-}
-
-func RegisterDifyApps(apps ...*dify.App) Option {
-	return func(h *Hub) {
-		h.difyApps = append(h.difyApps, apps...)
+		if h.commands == nil {
+			h.commands = make(map[string]command.Command)
+		}
+		for _, cmd := range commands {
+			h.commands[cmd.GetName()] = cmd
+		}
 	}
 }
