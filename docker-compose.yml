@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  dify-connector:
+#    image: leslieleung/dify-connector:latest
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Change this to your database DSN
+      - DATABASE_DSN=user:password@tcp(db:3306)/dify-connector?charset=utf8mb4&parseTime=True&loc=Local
+      # Change this to your bootstrap channel
+      # If you already have a channel, this will be skipped
+      # For discord, it's discord:<discord_bot_token>
+      # For dingtalk, its dingtalk:<client_id>:<client_secret>
+      - BOOTSTRAP_CHANNEL=xxx
+
+  db:
+    image: mysql:8.0
+    environment:
+      # Change this to a secure password
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=dify-connector
+      - MYSQL_USER=user
+      # Change this to a secure password
+      - MYSQL_PASSWORD=password
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:

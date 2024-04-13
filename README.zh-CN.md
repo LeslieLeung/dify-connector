@@ -9,12 +9,42 @@ dify-connector 是一个将 [Dify](https://github.com/langgenius/dify) 发布到
 ## 特性
 
 - 将 Dify 应用发布到各种 IM 平台(Discord, 钉钉等)
+  - ✅Discord
+  - ✅钉钉
+  - (计划中) Telegram
+  - 更多...(欢迎 PR)
 - (计划中) 管理控制台，用于管理 IM 频道和 Dify 应用
 - (计划中) 为 Dify 应用提供内容审查 API
 
 ## 部署
 
-🚧敬请期待
+### 开始之前
+
+你应该在 Discord 或者钉钉中创建一个机器人，并获取机器人的凭证。
+
+如果你不知道如何获取凭证，互联网和官方文档是你的朋友。
+
+其他前提条件：
+
+- 一个 [Dify](https://github.com/langgenius/dify) 实例(你可以使用官方实例)
+- 一个 MySQL 8.0 数据库(你可以使用其他数据库，只要它被 [GORM](https://gorm.io/) 支持)
+
+### Docker Compose(推荐)
+
+你应该在你的服务器上安装 Docker 和 Docker Compose。
+
+```bash
+git clone https://github.com/leslieleung/dify-connector.git
+docker-compose up -d
+```
+
+### Docker
+
+你应该在你的服务器上安装 Docker。并且你应该准备好一个数据库(推荐 MySQL 8.0)。
+
+```bash
+docker run -d --name dify-connector -e DATABASE_DSN=<YOUR_DSN> -e BOOTSTRAP_CHANNEL=<YOUR_CHANNEL> leslieleung/dify-connector:latest
+```
 
 ## 命令
 
