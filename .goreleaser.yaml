@@ -18,8 +18,7 @@ dockers:
   - image_templates:
       - leslieleung/dify-connector:{{ .Tag }}
       - leslieleung/dify-connector:latest
-    extra_files:
-      - .
+    dockerfile: 'release.Dockerfile'
 checksum:
   name_template: 'checksums.txt'
 snapshot:
