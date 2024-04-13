@@ -106,7 +106,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	msg := &command.Message{
 		Command:        "chat", // default to chat
 		Body:           content,
-		UserIdentifier: "discord:" + m.Author.ID,
+		UserIdentifier: fmt.Sprintf(UserIdentifierTemplate, TypeStrDiscord, m.Author.ID),
 	}
 	if command.IsCommand(parts[0]) {
 		msg.Command = strings.TrimSpace(parts[0])

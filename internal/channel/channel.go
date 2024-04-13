@@ -20,6 +20,23 @@ const (
 	TypeDingTalk
 )
 
+const (
+	TypeStrDiscord  = "discord"
+	TypeStrDingTalk = "dingtalk"
+)
+
+var TypeStrMap = map[int]string{
+	TypeDiscord:  TypeStrDiscord,
+	TypeDingTalk: TypeStrDingTalk,
+}
+
+var TypeMap = map[string]int{
+	TypeStrDiscord:  TypeDiscord,
+	TypeStrDingTalk: TypeDingTalk,
+}
+
+const UserIdentifierTemplate = "%s:%s" // <type>:<id>
+
 func LoadChannels(ctx context.Context) ([]Channel, error) {
 	channels, err := database.GetEnabledChannels(ctx)
 	if err != nil {

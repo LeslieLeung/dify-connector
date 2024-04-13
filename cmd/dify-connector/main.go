@@ -2,6 +2,7 @@ package difyconnector
 
 import (
 	"context"
+	"github.com/leslieleung/dify-connector/internal/bootstrap"
 	"github.com/leslieleung/dify-connector/internal/channel"
 	"github.com/leslieleung/dify-connector/internal/command"
 	"github.com/leslieleung/dify-connector/internal/database"
@@ -45,10 +46,20 @@ func runServe(_ *cobra.Command, _ []string) {
 		panic(err)
 	}
 
-	// TODO just a temporary thing, need to find a better way to initialize
 	if len(channels) == 0 {
-		slog.Info("No channels to start")
-		return
+		// read from BOOTSTRAP_CHANNEL
+		bs := os.Getenv("BOOTSTRAP_CHANNEL")
+		if bs == "" {
+			println("No channels found and BOOTSTRAP_CHANNEL is not set")
+			os.Exit(1)
+		}
+		// build channel
+		c, err := bootstrap.BuildChannel(ctx, bs)
+		if err != nil {
+			println(err.Error())
+			os.Exit(1)
+		}
+		channels = append(channels, c)
 	}
 
 	h := hub.New(

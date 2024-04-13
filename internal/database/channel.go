@@ -30,3 +30,7 @@ func GetEnabledChannels(ctx context.Context) ([]*typedef.Channel, error) {
 func ToggleChannel(ctx context.Context, id int, enabled bool) error {
 	return GetDB(ctx).Model(&typedef.Channel{}).Where("id = ?", id).Update("enabled", enabled).Error
 }
+
+func SaveChannel(ctx context.Context, channel *typedef.Channel) error {
+	return GetDB(ctx).Save(channel).Error
+}

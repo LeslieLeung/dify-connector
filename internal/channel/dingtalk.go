@@ -91,7 +91,7 @@ func onChatBotMessageReceived(ctx context.Context, data *chatbot.BotCallbackData
 	msg := &command.Message{
 		Command:        "chat",
 		Body:           content,
-		UserIdentifier: "dingtalk:" + data.SenderId,
+		UserIdentifier: fmt.Sprintf(UserIdentifierTemplate, TypeStrDingTalk, data.SenderId),
 	}
 	if command.IsCommand(parts[0]) {
 		msg.Command = strings.TrimSpace(parts[0])
