@@ -13,6 +13,7 @@ dify-connector is a tool to publish [Dify](https://github.com/langgenius/dify) a
   - ✅DingTalk
   - (Planned) Telegram
   - more to come...(PRs are welcome)
+- Use as a Go SDK for Dify
 - (Planned) Management console to manage IM channels and Dify apps
 - (Planned) Provide moderation API for Dify apps
 

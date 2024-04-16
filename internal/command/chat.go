@@ -43,7 +43,7 @@ func (c ChatCommand) Execute(ctx context.Context, msg *Message) (string, error) 
 		Inputs: map[string]interface{}{
 			"query": msg.Body,
 		},
-		ResponseMode: dify.OutputModeBlocking,
+		ResponseMode: dify.ResponseModeBlocking,
 		User:         uuid.New().String(),
 	})
 	if err != nil {

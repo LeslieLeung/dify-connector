@@ -13,6 +13,7 @@ dify-connector 是一个将 [Dify](https://github.com/langgenius/dify) 发布到
   - ✅钉钉
   - (计划中) Telegram
   - 更多...(欢迎 PR)
+- 作为 Dify 的 Go SDK 使用
 - (计划中) 管理控制台，用于管理 IM 频道和 Dify 应用
 - (计划中) 为 Dify 应用提供内容审查 API
 
