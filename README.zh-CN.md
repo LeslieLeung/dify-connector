@@ -56,3 +56,82 @@ docker run -d --name dify-connector -e DATABASE_DSN=<YOUR_DSN> -e BOOTSTRAP_CHAN
   - remove: 移除一个 Dify 应用。用法: `app remove id`。
   - toggle: 切换一个 Dify 应用。用法: `app toggle id`。
   - use: 使用一个 Dify 应用。用法: `app use id`。
+
+## Dify SDK
+
+### 阻塞模式
+
+```go
+package main
+
+import (
+  "errors"
+  "github.com/google/uuid"
+  "github.com/leslieleung/dify-connector/pkg/dify"
+  "io"
+)
+
+func main() {
+    client := dify.New("https://api.dify.ai", "app-xxx")
+    client.SetDebug()
+    
+    text := "Hello, how are you?"
+    
+    req := dify.CompletionMessageRequest{
+        Inputs: map[string]interface{}{
+        "query": text,
+        },
+        User: uuid.New().String(),
+    }
+    
+    resp, err := client.CompletionMessage(req)
+    if err != nil {
+        panic(err)
+    }
+    print(resp.Answer)
+}
+```
+
+### 流式模式
+
+```go
+package main
+
+import (
+  "errors"
+  "github.com/google/uuid"
+  "github.com/leslieleung/dify-connector/pkg/dify"
+  "io"
+)
+
+func main() {
+  client := dify.New("https://api.dify.ai", "app-xxx")
+  client.SetDebug()
+
+  text := "Hello, how are you?"
+
+  req := dify.CompletionMessageRequest{
+    Inputs: map[string]interface{}{
+      "query": text,
+    },
+    User: uuid.New().String(),
+  }
+
+  resp, err := client.CompletionMessageStreaming(req)
+  if err != nil {
+    panic(err)
+  }
+  for {
+    r, err := resp.Recv()
+    if err != nil {
+      if errors.Is(err, io.EOF) {
+        break
+      }
+    }
+    if r.Answer != "" {
+      print(r.Answer)
+    }
+  }
+}
+
+```
