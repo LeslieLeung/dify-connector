@@ -24,6 +24,10 @@ type ChatCompletionMessageResponse struct {
 	CreatedAt int    `json:"created_at"`
 }
 
+func (c ChatCompletionMessageResponse) GetString() string {
+	return c.Answer
+}
+
 type ChatMessageRequest struct {
 	Inputs         map[string]interface{} `json:"inputs"`
 	Query          string                 `json:"query"`
@@ -46,6 +50,10 @@ type ChatMessageStreamResponse struct {
 	Answer         string `json:"answer"`
 	CreatedAt      int64  `json:"created_at"`
 	ConversationID string `json:"conversation_id"`
+}
+
+func (r ChatMessageStreamResponse) GetString() string {
+	return r.Answer
 }
 
 type ChatMessageStreamChannelResponse struct {
@@ -190,6 +198,10 @@ type WorkflowRunStreamResponse struct {
 		TotalSteps        int                    `json:"total_steps,omitempty"`
 		FinishedAt        int64                  `json:"finished_at,omitempty"`
 	}
+}
+
+func (r WorkflowRunStreamResponse) GetString() string {
+	return r.Data.Outputs
 }
 
 type SuggestedResponse struct {

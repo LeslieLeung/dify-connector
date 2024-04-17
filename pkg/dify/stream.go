@@ -4,10 +4,12 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/go-resty/resty/v2"
 	"io"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -21,6 +23,7 @@ type Unmarshaler interface {
 
 type streamable interface {
 	ChatCompletionMessageResponse | ChatMessageStreamResponse | WorkflowRunStreamResponse
+	GetString() string
 }
 
 type streamReader[T streamable] struct {
@@ -108,6 +111,21 @@ func (stream *streamReader[T]) unmarshalError() (errResp *ErrorResponse) {
 
 func (stream *streamReader[T]) Close() error {
 	return stream.response.Body.Close()
+}
+
+func (stream *streamReader[T]) Wait() (string, error) {
+	sb := strings.Builder{}
+	for {
+		resp, err := stream.Recv()
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return "", err
+		}
+		sb.WriteString(resp.GetString())
+	}
+	return sb.String(), nil
 }
 
 func sendRequestStream[T streamable](req *resty.Request, method, url string) (*streamReader[T], error) {
