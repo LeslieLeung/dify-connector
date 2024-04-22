@@ -2,6 +2,7 @@ package hub
 
 import (
 	"context"
+	"github.com/leslieleung/dify-connector/internal/api"
 	"github.com/leslieleung/dify-connector/internal/channel"
 	"github.com/leslieleung/dify-connector/internal/command"
 	"sync"
@@ -27,10 +28,11 @@ func New(opts ...Option) *Hub {
 func (h *Hub) Start(ctx context.Context) {
 	command.Commands = h.commands
 	for _, c := range h.channels {
-		println("Starting channel")
 		h.wg.Add(1)
 		go c.Start(ctx, h.wg)
 	}
+	h.wg.Add(1)
+	go api.StartAPI(ctx, h.wg)
 	h.wg.Wait()
 }
 

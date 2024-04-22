@@ -13,10 +13,6 @@ type ChatCommand struct{}
 
 var _ Command = (*ChatCommand)(nil)
 
-func NewChatCommand() ChatCommand {
-	return ChatCommand{}
-}
-
 func (c ChatCommand) GetName() string {
 	return "chat"
 }

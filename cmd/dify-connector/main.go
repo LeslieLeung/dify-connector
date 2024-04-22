@@ -8,7 +8,6 @@ import (
 	"github.com/leslieleung/dify-connector/internal/database"
 	"github.com/leslieleung/dify-connector/internal/hub"
 	"github.com/spf13/cobra"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,23 +19,15 @@ var ServeCmd = &cobra.Command{
 }
 
 func runServe(_ *cobra.Command, _ []string) {
-	ctx, cancel := context.WithCancel(context.Background())
-
-	// handle exit signals gracefully
-	go func() {
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
-		if <-sigChan; true {
-			slog.Info("Shutting down")
-			cancel()
-		}
-	}()
-
 	if os.Getenv("DATABASE_DSN") == "" {
 		println("DATABASE_DSN is required")
 		os.Exit(1)
 	}
+
+	ctx := context.Background()
+	// handle exit signals gracefully
+	ctx, stop := signal.NotifyContext(ctx, syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
 	// Initialize DB
 	database.Init(os.Getenv("DATABASE_DSN"))
